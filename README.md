@@ -418,7 +418,8 @@ docker build . -t bpk/inpx-web
 ```
 
 Пример команды запуска после сборки:
-не забыть заменить подстроки с флажками <host-libruArch> 
+
+!не забыть заменить подстроки с флажками <host-libruArch> 
 ```bash
 docker run \
 -v /bookshelf/inpx-web/config:/configDir \

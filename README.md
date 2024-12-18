@@ -410,4 +410,23 @@ node server --app-dir=.inpx-web
 npm run dev
 ```
 
-Связаться с автором проекта: [bookpauk@gmail.com](mailto:bookpauk@gmail.com)
+### Для запуска в docker Container 
+
+В каталоге с приложением, собираем контейнер:
+```bash
+docker build . -t bpk/inpx-web
+```
+
+Пример команды запуска после сборки:
+не забыть заменить подстроки с флажками <host-libruArch> 
+```bash
+docker run \
+-v /bookshelf/inpx-web/config:/configDir \
+-v <host-libruArch>:/inpxDir \
+-v <host-libruArch>:/libDir \
+-v <host-libruData>:/dataDir \
+-p 12380:12380 \
+bpk/inpx-web node server --app-dir=.inpx-web \
+--data-dir=/dataDir \
+--lib-dir=/libDir
+```

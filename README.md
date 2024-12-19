@@ -389,6 +389,7 @@ npm run release
 # установка nodejs v16 и выше:
 curl -s https://deb.nodesource.com/setup_16.x | sudo bash
 sudo apt install nodejs -y
+sudo apt install zip
 
 # подготовка
 git clone https://github.com/bookpauk/inpx-web

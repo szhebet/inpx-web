@@ -66,6 +66,7 @@ class DbCreator {
         let librateArr = [];
         let extMap = new Map();//тип файла
         let extArr = [];
+        let archArr=[]; //массив имен файлов с архивами книг
 
         let uidSet = new Set();//уникальные идентификаторы
 

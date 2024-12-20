@@ -44,6 +44,67 @@ class InpxParser {
         return result;
     }
 
+    checkNumInRange(str, num3) {
+        //на вход принимает строку формата "fb2-<num1>-<num2>.zip" и число num3 и возвращает true если num1>=num3>=num1 и false в противном случае
+        //смысл функции - проверить, что файл с именем num3 лежит в архиве,  в имени которого закодирован интервал входящих в него файлов
+        try {
+            const nums = str.match(/-(\d+)-(\d+)\.zip/);
+            if (!nums) {
+                return false;
+            }
+            const num1 = parseInt(nums[1], 10);
+            const num2 = parseInt(nums[2], 10);
+            return num1 >= num3 && num3 >= num2;
+        } catch (error) {
+            console.error(error);
+            return false;
+        }
+     }
+
+     static archIndex=0;
+    /*
+     @param {ubookID} int
+    */
+     findArchByBook (bookID){
+        // ищем имя файла с архивом, в котором лежит книга
+        // на вход получаем id книги и используем глобальный массив книг - archArr, который заполняется на этапе инициализации
+        // !!!массив книг заполняется только один раз при импорте inpx файла
+        // архивов может быть много >5 тыс., поэтому ускоряем по максимуму
+        // для ускорения поиска используем глобальную переменную индекса, в расчете на то, что все книги обрабатываются последовательно
+        let result="";
+        let lIndex=archIndex;
+        let notFound=1;
+
+      
+        if (typeof bookID === "string") {// на всякий случай проверим тип
+            bookID = parseInt(bookID, 10);
+        }
+
+        while (lIndex < archArr.length && notFound) {
+            if (checkNumInRange(archArr[lIndex],bookID))
+            {
+                notFound=0;
+                result=archArr[lIndex];
+            }
+            else
+            lIndex++;
+        }
+        //если не нашли за 1й проход, значит файл пришел не по порядку, попробуем зайти на 2й круг
+        if (notFound) lIndex=0;
+
+        while (lIndex <= archIndex && notFound) {//начнем сначала и поищем еще раз 
+            if (checkNumInRange(archArr[lIndex],bookID))
+                {
+                    notFound=0;
+                    result=archArr[lIndex];
+                }
+            lIndex++;
+        }
+
+
+        return result;// если дошли сюда, значит файл не найден, вернем пустоту
+     }
+
     getRecStruct(structure) {
         const result = [];
         let struct = structure;
@@ -158,8 +219,10 @@ class InpxParser {
             }
 
             if (!rec.folder)
-                rec.folder = defaultFolder;
-
+                {
+                    //rec.folder = defaultFolder; //ищем правильную папку
+                    rec.folder=findArchByBook(rec.file)
+                }
             rec.serno = parseInt(rec.serno, 10) || 0;
             rec.size = parseInt(rec.size, 10) || 0;
             rec.del = parseInt(rec.del, 10) || 0;

@@ -10,6 +10,8 @@ const utils = require('./core/utils');
 
 const ayncExit = new (require('./core/AsyncExit'))();
 
+const archArr=[]; //массив имен файлов с архивами книг - нужен только на этапе инициализации для заполнения БД
+
 let log;
 let config;
 let argv;
@@ -114,7 +116,15 @@ async function init() {
             const inpxFiles = [];
             await utils.findFiles((file) => {
                 if (path.extname(file) == '.inpx')
-                    inpxFiles.push(file);
+                    {
+                        inpxFiles.push(file);
+                    }
+                    else // заодно соберем массив файлов с архивами книг
+                    {
+                        archArr.push(file.name);//нужно только имя файла
+                    }
+                
+
             }, config.libDir, false);
 
             if (inpxFiles.length) {

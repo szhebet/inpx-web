@@ -9,8 +9,8 @@ const WebSocket = require ('ws');
 const utils = require('./core/utils');
 
 const ayncExit = new (require('./core/AsyncExit'))();
-
-const archArr=[]; //массив имен файлов с архивами книг - нужен только на этапе инициализации для заполнения БД
+//var ipClass =  new (require('./core/InpxParser'))();
+const inpxParser = require('./core/InpxParser');
 
 let log;
 let config;
@@ -114,16 +114,18 @@ async function init() {
             }
         } else {
             const inpxFiles = [];
+            console.log('start INPX search');
             await utils.findFiles((file) => {
                 if (path.extname(file) == '.inpx')
                     {
+                        console.log('found INPX file ');
                         inpxFiles.push(file);
                     }
                     else // заодно соберем массив файлов с архивами книг
                     {
-                        archArr.push(file.name);//нужно только имя файла
+                        //console.log('add file: ' + path.basename(file));
+                        inpxParser.archArr.push(path.basename(file));//нужно только имя файла
                     }
-                
 
             }, config.libDir, false);
 

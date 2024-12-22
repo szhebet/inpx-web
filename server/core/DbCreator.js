@@ -66,8 +66,7 @@ class DbCreator {
         let librateArr = [];
         let extMap = new Map();//тип файла
         let extArr = [];
-        let archArr=[]; //массив имен файлов с архивами книг
-
+    
         let uidSet = new Set();//уникальные идентификаторы
 
         //stats
@@ -266,7 +265,7 @@ class DbCreator {
         };
 
         //парсинг
-        const parser = new InpxParser();
+        const parser = new InpxParser.InpxParser();
         await parser.parse(config.inpxFile, readFileCallback, parsedCallback);        
 
         //чистка памяти, ибо жрет как не в себя

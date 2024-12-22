@@ -6,7 +6,7 @@ const utils = require('./utils');
 const collectionInfo = 'collection.info';
 const structureInfo = 'structure.info';
 const versionInfo = 'version.info';
-
+ 
 const defaultStructure = 'AUTHOR;GENRE;TITLE;SERIES;SERNO;FILE;SIZE;LIBID;DEL;EXT;DATE;LANG;LIBRATE;KEYWORDS';
 //'AUTHOR;GENRE;TITLE;SERIES;SERNO;FILE;SIZE;LIBID;DEL;EXT;DATE;INSNO;FOLDER;LANG;LIBRATE;KEYWORDS;'
 const recStructType = {
@@ -28,10 +28,14 @@ const recStructType = {
     keywords: 'S',
 }
 
+const archArr=[]; //массив имен файлов с архивами книг - нужен только на этапе инициализации для заполнения БД
+
 class InpxParser {
     constructor() {
         this.inpxInfo = {};
+        this.archIndex=0;
     }
+
 
     async safeExtractToString(zipReader, fileName) {
         let result = '';
@@ -44,8 +48,8 @@ class InpxParser {
         return result;
     }
 
-    checkNumInRange(str, num3) {
-        //на вход принимает строку формата "fb2-<num1>-<num2>.zip" и число num3 и возвращает true если num1>=num3>=num1 и false в противном случае
+    isNumInRange(str, num3) {
+        //на вход принимает строку формата "fb2-<num1>-<num2>.zip" и число num3 и возвращает true если num1<=num3<=num1 и false в противном случае
         //смысл функции - проверить, что файл с именем num3 лежит в архиве,  в имени которого закодирован интервал входящих в него файлов
         try {
             const nums = str.match(/-(\d+)-(\d+)\.zip/);
@@ -54,13 +58,14 @@ class InpxParser {
             }
             const num1 = parseInt(nums[1], 10);
             const num2 = parseInt(nums[2], 10);
-            return num1 >= num3 && num3 >= num2;
+            return (num1 <= num3 && num3 <= num2);
         } catch (error) {
             console.error(error);
             return false;
         }
      }
 
+     
      static archIndex=0;
     /*
      @param {ubookID} int
@@ -72,19 +77,20 @@ class InpxParser {
         // архивов может быть много >5 тыс., поэтому ускоряем по максимуму
         // для ускорения поиска используем глобальную переменную индекса, в расчете на то, что все книги обрабатываются последовательно
         let result="";
-        let lIndex=archIndex;
-        let notFound=1;
+        let lIndex=this.archIndex;
+        let notFound=true;
 
-      
+
         if (typeof bookID === "string") {// на всякий случай проверим тип
             bookID = parseInt(bookID, 10);
         }
 
         while (lIndex < archArr.length && notFound) {
-            if (checkNumInRange(archArr[lIndex],bookID))
+            if (this.isNumInRange(archArr[lIndex],bookID))
             {
-                notFound=0;
+                notFound=false;
                 result=archArr[lIndex];
+                this.archIndex=lIndex;
             }
             else
             lIndex++;
@@ -92,11 +98,12 @@ class InpxParser {
         //если не нашли за 1й проход, значит файл пришел не по порядку, попробуем зайти на 2й круг
         if (notFound) lIndex=0;
 
-        while (lIndex <= archIndex && notFound) {//начнем сначала и поищем еще раз 
-            if (checkNumInRange(archArr[lIndex],bookID))
+        while (lIndex <= this.archIndex && notFound) {//начнем сначала и поищем еще раз 
+            if (this.isNumInRange(archArr[lIndex],bookID))
                 {
-                    notFound=0;
+                    notFound=false;
                     result=archArr[lIndex];
+                    this.archIndex=lIndex;
                 }
             lIndex++;
         }
@@ -186,6 +193,7 @@ class InpxParser {
 
         const defaultFolder = `${path.basename(inpFile, '.inp')}.zip`;
         const structLen = structure.length;
+        console.log('Entered ParseINP ');
 
         for (const row of rows) {
             let line = row;
@@ -221,7 +229,7 @@ class InpxParser {
             if (!rec.folder)
                 {
                     //rec.folder = defaultFolder; //ищем правильную папку
-                    rec.folder=findArchByBook(rec.file)
+                    rec.folder=this.findArchByBook(rec.file)
                 }
             rec.serno = parseInt(rec.serno, 10) || 0;
             rec.size = parseInt(rec.size, 10) || 0;
@@ -244,4 +252,5 @@ class InpxParser {
     }
 }
 
-module.exports = InpxParser;
+module.exports.InpxParser = InpxParser;
+module.exports.archArr = archArr;

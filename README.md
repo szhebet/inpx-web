@@ -1,5 +1,7 @@
 inpx-web
 ========
+_**Fork от https://github.com/bookpauk/inpx-web 
+для внесения изменений в структуру хранения данных в библиотеке.**_
 
 Веб-сервер для поиска по .inpx-коллекции.
 
@@ -18,8 +20,6 @@ OPDS-сервер доступен по адресу [http://127.0.0.1:12380/opd
 
 Для указания местоположения .inpx-файла или папки с файлами библиотеки, воспользуйтесь [параметрами командной строки](#cli).
 Дополнительные параметры сервера настраиваются в [конфигурационном файле](#config).
-
-[Отблагодарить автора проекта](https://donatty.com/liberama)
 
 ## 
 * [Возможности программы](#capabilities)
@@ -389,6 +389,7 @@ npm run release
 # установка nodejs v16 и выше:
 curl -s https://deb.nodesource.com/setup_16.x | sudo bash
 sudo apt install nodejs -y
+sudo apt install zip
 
 # подготовка
 git clone https://github.com/bookpauk/inpx-web
@@ -417,8 +418,9 @@ npm run dev
 docker build . -t bpk/inpx-web
 ```
 
-Пример команды запуска после сборки:
-не забыть заменить подстроки с флажками <host-libruArch> 
+Пример команды запуска после сборки ниже.
+
+!не забыть перед выполнением заменить подстроки с флажками <host-libruArch> 
 ```bash
 docker run \
 -v /bookshelf/inpx-web/config:/configDir \

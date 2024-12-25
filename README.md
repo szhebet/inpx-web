@@ -436,5 +436,6 @@ docker run \
 -p 12380:12380 \
 bpk/inpx-web node server --app-dir=.inpx-web \
 --data-dir=/dataDir \
---lib-dir=/libDir
+--lib-dir=/libDir \
+--multyArchiveStorage=true
 ```

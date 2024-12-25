@@ -9,7 +9,7 @@ const WebSocket = require ('ws');
 const utils = require('./core/utils');
 
 const ayncExit = new (require('./core/AsyncExit'))();
-//var ipClass =  new (require('./core/InpxParser'))();
+const configBase = require ('./config/base');
 const inpxParser = require('./core/InpxParser');
 
 let log;
@@ -33,6 +33,7 @@ Options:
   --inpx=<filepath>    Set INPX collection file, default: the one that found in library dir
   --recreate           Force recreation of the search database on start
   --unsafe-filter      Use filter config at your own risk
+  --multyArchiveStorage set = true if books stored in multiple archives (Default=false)
 `
     );
 }
@@ -41,6 +42,7 @@ async function init() {
     argv = require('minimist')(process.argv.slice(2), {string: argvStrings});
     const argvDataDir = argv['data-dir'] || argv['app-dir'];
     const configFile = argv['config'];
+    const multyArchiveStorage= argv['multyArchiveStorage'];
 
     //config
     const configManager = new (require('./config'))();//singleton
@@ -63,6 +65,12 @@ async function init() {
     config.rootPathStatic = config.server.root || '';
     config.bookPathStatic = `${config.rootPathStatic}/book`;
     config.bookDir = `${config.publicFilesDir}/book`;
+    if (multyArchiveStorage=='true') //если в командной строке передан признак хранения в нескольких архивах, то сохраним его 
+        {
+            config.multyArchiveStorage = multyArchiveStorage;
+            configBase.multyArchiveStorage=multyArchiveStorage;
+
+        }
 
     configManager.config = config;
 

@@ -6,6 +6,8 @@ const utils = require('./utils');
 const collectionInfo = 'collection.info';
 const structureInfo = 'structure.info';
 const versionInfo = 'version.info';
+
+const config = require ('../config/base');
  
 const defaultStructure = 'AUTHOR;GENRE;TITLE;SERIES;SERNO;FILE;SIZE;LIBID;DEL;EXT;DATE;LANG;LIBRATE;KEYWORDS';
 //'AUTHOR;GENRE;TITLE;SERIES;SERNO;FILE;SIZE;LIBID;DEL;EXT;DATE;INSNO;FOLDER;LANG;LIBRATE;KEYWORDS;'
@@ -73,7 +75,7 @@ class InpxParser {
      findArchByBook (bookID){
         // ищем имя файла с архивом, в котором лежит книга
         // на вход получаем id книги и используем глобальный массив книг - archArr, который заполняется на этапе инициализации
-        // !!!массив книг заполняется только один раз при импорте inpx файла
+        // !!!массив книг заполняется только один раз при формировании БД, при импорте inpx файла
         // архивов может быть много >5 тыс., поэтому ускоряем по максимуму
         // для ускорения поиска используем глобальную переменную индекса, в расчете на то, что все книги обрабатываются последовательно
         let result="";
@@ -109,7 +111,7 @@ class InpxParser {
         }
 
 
-        return result;// если дошли сюда, значит файл не найден, вернем пустоту
+        return result;// если файл найден - вернем его название, если нет, то вернем пустоту
      }
 
     getRecStruct(structure) {
@@ -228,8 +230,10 @@ class InpxParser {
 
             if (!rec.folder)
                 {
-                    //rec.folder = defaultFolder; //ищем правильную папку
-                    rec.folder=this.findArchByBook(rec.file)
+                    if(config.multyArchiveStorage=='true') //если в настройках указано, что архивов с файлами несколько, то
+                    rec.folder=this.findArchByBook(rec.file) //ищем правильный архив с файлом
+                    else
+                    rec.folder = defaultFolder; //ставим каталог по умолчанию
                 }
             rec.serno = parseInt(rec.serno, 10) || 0;
             rec.size = parseInt(rec.size, 10) || 0;

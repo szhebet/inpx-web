@@ -427,6 +427,11 @@ class WebWorker {
                     await zipReader.extractToFile(file.replace('.fb2', '.zip'), outFile);                    
                 }
 
+                if (!await fs.pathExists(outFile)) {//не удалось найти в архиве, и проверим последний вариант (с кодировкой и в архиве)
+                    console.log('search filename: ' + iconv.encode(file.replace('.fb2', '.zip'), 'cp866').toString());
+                    await zipReader.extractToFile(iconv.encode(file.replace('.fb2', '.zip'), 'cp866').toString(), outFile);                    
+                }
+
                 return outFile;
             } finally {
                 await zipReader.close();

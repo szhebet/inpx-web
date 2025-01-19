@@ -34,6 +34,7 @@ Options:
   --recreate           Force recreation of the search database on start
   --unsafe-filter      Use filter config at your own risk
   --multyArchiveStorage set = true if books stored in multiple archives (Default=false)
+  --shutdownOnIddle set =true to exit program when idle (Default=false)
 `
     );
 }
@@ -43,6 +44,7 @@ async function init() {
     const argvDataDir = argv['data-dir'] || argv['app-dir'];
     const configFile = argv['config'];
     const multyArchiveStorage= argv['multyArchiveStorage'];
+    const shutdownOnIddle= argv['shutdownOnIddle'];
 
     //config
     const configManager = new (require('./config'))();//singleton
@@ -71,6 +73,8 @@ async function init() {
             configBase.multyArchiveStorage=multyArchiveStorage;
 
         }
+    
+    config.shutdownOnIddle = shutdownOnIddle;
 
     configManager.config = config;
 
@@ -191,7 +195,7 @@ async function main() {
     //server
     const app = express();
 
-    const server = http.createServer(app);
+    const server = await http.createServer(app);
     const wss = new WebSocket.Server({ server, maxPayload: config.maxPayloadSize*1024*1024 });
 
     let devModule = undefined;

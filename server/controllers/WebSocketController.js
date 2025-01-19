@@ -1,5 +1,6 @@
 const _ = require('lodash');
 const WebSocket = require ('ws');
+const http = require('http');
 
 const WorkerState = require('../core/WorkerState');//singleton
 const WebWorker = require('../core/WebWorker');//singleton
@@ -8,6 +9,7 @@ const utils = require('../core/utils');
 
 const cleanPeriod = 1*60*1000;//1 минута
 const closeSocketOnIdle = 5*60*1000;//5 минут
+const waitIddleCicles=3; //если waitIddleCicles циклов cleanPeriod ни одного коннекта не появилось, то завершаем приложение
 
 class WebSocketController {
     constructor(wss, webAccess, config) {
@@ -21,6 +23,7 @@ class WebSocketController {
 
         this.wss = wss;
 
+        this.iddleCounter=0;
         wss.on('connection', (ws) => {
             ws.on('message', (message) => {
                 this.onMessage(ws, message.toString());
@@ -30,16 +33,29 @@ class WebSocketController {
                 log(LM_ERR, err);
             });
         });
+        log(`this.config.shutdownOnIddle: ` + this.config.shutdownOnIddle);
 
         this.periodicClean();//no await
     }
 
     async periodicClean() {
         while (1) {//eslint-disable-line no-constant-condition
+            
             try {
                 const now = Date.now();
 
-                //почистим ws-клиентов
+                if ((this.wss.clients.size==0)&&(this.config.shutdownOnIddle=="true")){//если клиентов нет в течение waitIddleCicles срабатывания процедуры, то останавливаем сервер
+                    this.iddleCounter++;
+                    if (this.iddleCounter>waitIddleCicles){
+                        await log(`No active clients found. Closing wss server.`); //await чтобы успели написать в лог до завершения приложения
+                        process.exit(0);
+                    }
+                }
+                else{//если в течение циклов ожидания клиенты появились, то обнуляем счетчик
+                    this.iddleCounter=0;
+                }
+                
+                //почистим неактивных ws-клиентов
                 this.wss.clients.forEach((ws) => {
                     if (!ws.lastActivity || now - ws.lastActivity > closeSocketOnIdle - 50) {
                         ws.terminate();

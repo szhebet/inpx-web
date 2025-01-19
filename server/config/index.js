@@ -21,6 +21,7 @@ const propsToSave = [
     'logServerStats',
     'logQueries',
     'multyArchiveStorage',
+    'shutdownOnIddle',
     'dbCacheSize',
     'maxFilesDirSize',
     'queryCacheEnabled',

@@ -441,4 +441,78 @@ bpk/inpx-web node server --app-dir=.inpx-web \
 --data-dir=/dataDir \
 --lib-dir=/libDir \
 --multyArchiveStorage=true
+--shutdownOnIddle=true
+```
+
+### Автозапуск приложения при обращении (только для nix ОС)
+Суть манипуляции:
+1. создаем контейнер (из собранного заранее образа, см предыдущий пункт)
+2. в systemd создается 3 записи:
+   - bpk-listen9000.socket - слушатель порта 9000
+   - bpk-proxy.service - прокси
+   - bpk-container-starter.service - запускает контейнер с приложением
+3. как только слушатель видит активность по порту 9000, он активирует 2 сервиса (прокси и запускает контейнер)
+4. контейнер запускатеся с флагом --shutdownOnIddle=true, что означает, что он будет остановлен в случае отсутствия пользовательской активности
+
+теперь код:
+#### Cоздаем контейнер:
+```bash
+docker run --name bpk_bookshelf \
+-v /bookshelf/inpx-web/config:/configDir \
+-v <host-libruArch>:/inpxDir \
+-v <host-libruArch>:/libDir \
+-v <host-libruData>:/dataDir \
+-p 12380:12380 \
+-d \
+bpk/inpx-web node server --app-dir=.inpx-web \
+--data-dir=/dataDir \
+--lib-dir=/libDir \
+--multyArchiveStorage=true \
+--shutdownOnIddle=true
+```
+
+#### Cоздаем записи в systemd:
+sudo nano /etc/systemd/system/bpk-listen9000.socket
+
+```bash
+[Unit]
+Description=bookshelf listen to start
+
+[Socket]
+ListenStream=9000
+Service=bpk-proxy.service
+
+[Install]
+WantedBy=sockets.target
+```
+
+sudo nano /etc/systemd/system/bpk-proxy.service
+
+```bash
+[Unit]
+BindsTo=bpk-container-starter.service
+After=bpk-listen9000.socket
+
+[Service]
+ExecStart=/lib/systemd/systemd-socket-proxyd 127.0.0.1:12380
+```
+
+sudo nano /etc/systemd/system/bpk-container-starter.service
+
+```bash
+[Unit]
+Description=bpk-container-starter service
+After=network.target bpk-listen9000.socket
+Requires=bpk-listen9000.socket
+
+[Service]
+ExecStart=docker start bpk_bookshelf -a
+
+ExecStartPost=/bin/sleep 10
+```
+#### Запуск
+Перезагрузим systemd и включим все
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable bpk-listen9000.socket
 ```

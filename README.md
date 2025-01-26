@@ -515,4 +515,5 @@ ExecStartPost=/bin/sleep 10
 ```bash
 sudo systemctl daemon-reload
 sudo systemctl enable bpk-listen9000.socket
+sudo systemctl start bpk-listen9000.socket
 ```
